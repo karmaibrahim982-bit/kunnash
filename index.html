@@ -412,11 +412,17 @@ function renderAuth(){
 }
 $('#authBtn').onclick=async()=>{
   if(!fb)return;
-  if(user){ try{await fb.authMod.signOut(fb.auth);}catch(e){} }
-  else{
-    const p=new fb.authMod.GoogleAuthProvider();
-    try{ await fb.authMod.signInWithPopup(fb.auth,p); }
-    catch(e){ try{ await fb.authMod.signInWithRedirect(fb.auth,p); }catch(e2){ toast('تعذّر الدخول'); } }
+  if(user){ try{await fb.authMod.signOut(fb.auth);}catch(e){} return; }
+  const p=new fb.authMod.GoogleAuthProvider();
+  try{
+    await fb.authMod.signInWithPopup(fb.auth,p);
+  }catch(e){
+    const code=(e&&e.code)?e.code:'unknown';
+    console.error('signin error:',e);
+    if(code==='auth/popup-blocked'||code==='auth/cancelled-popup-request'||code==='auth/popup-closed-by-user'){
+      try{ await fb.authMod.signInWithRedirect(fb.auth,p); return; }catch(e2){ toast('خطأ: '+(e2&&e2.code?e2.code:code)); return; }
+    }
+    toast('خطأ الدخول: '+code);
   }
 };
 
