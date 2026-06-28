@@ -469,11 +469,13 @@ async function startCloud(){
   $('#syncText').textContent='بيتم تجهيز المزامنة...';
   try{
     const base=`https://www.gstatic.com/firebasejs/${FB_VER}`;
-    const [appMod,authMod,fsMod]=await Promise.all([
+    const loadP=Promise.all([
       import(`${base}/firebase-app.js`),
       import(`${base}/firebase-auth.js`),
       import(`${base}/firebase-firestore.js`),
     ]);
+    const timeoutP=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),9000));
+    const [appMod,authMod,fsMod]=await Promise.race([loadP,timeoutP]);
     const app=appMod.initializeApp(FIREBASE_CONFIG);
     const auth=authMod.getAuth(app);
     let fdb;
@@ -491,7 +493,7 @@ let CLOUD_FAILED=false;
 function renderAuthFailed(){
   $('#syncbar').style.display='flex';
   $('#sdot').classList.remove('live');
-  $('#syncText').textContent='المزامنة مش متاحة هنا — افتحي الموقع المرفوع على GitHub';
+  $('#syncText').textContent='المزامنة مش شغّالة هنا — لازم تفتحي لينك الموقع المرفوع على GitHub';
   $('#authBtn').style.display='none';
 }
 
